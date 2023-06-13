@@ -1,16 +1,17 @@
 population:
-  initial: 5
+  initial:
+    - initial: { }
+    - mutate: { current: 0, iter: 2 }
+    - mutate: { current: 1, iter: 2 }
+    - mutate: { current: 2, iter: 2 }
+    - mutate: { current: 3, iter: 2 }
+
   selection:
-    best:
-      pick: { top: 0 }
-    second_best:
-      pick: { top: 1 } 
-    mutate_best:
-      mutate: { top: 0 }
-    breed_top_two:
-      breed:
-        mom: { top: 0 }
-        dad: { top: 1 } 
+    - pick: { top: 0 }
+    - pick: { top: 1 } 
+    - mutate: { top: 0, iter: 1 }
+    - mutate: { top: 0, iter: 5 }
+    - breed: { mom: { top: 0 }, dad: { top: 1 } }
 
 params:
 - parameter: temperature
