@@ -1,5 +1,6 @@
 import random
 import yaml
+from copy import copy
 
 # A single mutatable parameter
 class ParameterMutation:
@@ -37,32 +38,40 @@ class ParameterMutationList:
     def __init__(self, params, id, parent = []):
         self.id = id
         self.parent = parent
-        self.mutation_list = []
-        self.params = params
-        for mutation_dict in params:
-            mutation = ParameterMutation(**mutation_dict)
-            self.mutation_list.append(mutation)
-            setattr(self, mutation.parameter, mutation.value)
+        self.mutation_list = [ParameterMutation(**mutation_dict) for mutation_dict in params]
 
-    def mutate(self, iter=1):
-        for _ in range(iter):
-            mutation = random.choice(self.mutation_list)
-            mutation.mutate()
-            setattr(self, mutation.parameter, mutation.value)
-
-    def breed(self, other, new_id):
-        child = ParameterMutationList(self.params, new_id, [self.id, other.id])
-        for mutation in self.mutation_list:
-            other_v = getattr(other, mutation.parameter)
-            child.parameters[mutation.parameter] = random.choice([mutation.value, other_v])
-        return child
+    def get_parameters(self):
+        return {mutation.parameter: mutation.value for mutation in self.mutation_list}
     
+    def clone(self, new_id):
+        params = [copy(mutation.__dict__) for mutation in self.mutation_list]
+        for p in params:
+            p['initial_value'] = p.pop('value')
+        return ParameterMutationList(params, new_id, [self.id])
+    
+    def mutate(self, new_id, iter):
+        mutant = self.clone(new_id)
+        for _ in range(iter):
+            mutation = random.choice(mutant.mutation_list)
+            mutation.mutate()
+        return mutant
+
+    def breed(self, new_id, other):
+        child = self.clone(new_id)
+        child.parent = [self.id, other.id]
+        other_params = other.get_parameters()
+        for mutation in child.mutation_list:
+            mutation.value = random.choice([mutation.value, other_params[mutation.parameter]])
+        return child
+
     def __repr__(self):
         return f"[{self.id:2d}] "+' '.join([str(mutation) for mutation in self.mutation_list])
 
 config = yaml.safe_load(open('config.yaml'))
-params = ParameterMutationList(config['params'], 0)
-print(params)
-params.mutate(10)
-print(params)
-params.mutate(10)
+p1 = ParameterMutationList(config['params'], 0)
+print(p1)
+p2 = p1.mutate(1, 10)
+print(p2)
+p3 = p1.breed(2, p2)
+print(p3)
+print(p3.get_parameters())
