@@ -67,6 +67,31 @@ class ParameterMutationList:
     def __repr__(self):
         return f"[{self.id:2d}] "+' '.join([str(mutation) for mutation in self.mutation_list])
 
+class FitnessEvaluator():
+    def get_evaluation(self, id):
+        return None
+    
+    def perform_evaluation(self, id):
+        pass
+
+    def wait_all(self):
+        pass
+
+class Evolution():
+    def __init__(self, param_list, evaluator, config):
+        self.evaluator = evaluator
+        self.param_list = param_list
+        self.config = config
+        self.generations = []
+
+    def pick(self):
+
+    def create_generation(self):
+        pass
+
+    def run(self):
+        pass
+
 config = yaml.safe_load(open('config.yaml'))
 p1 = ParameterMutationList(config['params'], 0)
 print(p1)
