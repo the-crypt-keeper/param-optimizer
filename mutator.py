@@ -83,15 +83,9 @@ class FitnessCanAiCode(FitnessBase):
         return evals
 
 config = yaml.safe_load(open('config.yaml'))
-evaluator = FitnessCanAiCode(
-    language = 'both',
-    input = 'can-ai-code/results/prepare_junior-dev_python_Vicuna-1p1.ndjson',
-    interviewer = 'python3 can-ai-code/interview-llamacpp.py --ssh miner --threads 4 --model /home/miner/ai/models/v3/ggml-vicuna-7b-1.1-q5_0.bin',
-    evaluate = 'python3 can-ai-code/evaluate.py',
-    paramdir = 'python-vicuna-7b/',
-    paramprefix = 'vicuna-7b',
-    resultglob = 'can-ai-code/results/eval_junior-dev_python_Vicuna-1p1*vicuna-7b-{id}*.ndjson'
-)
-
+if 'FitnessCanAiCode' in config['fitness']:
+    evaluator = FitnessCanAiCode(**config['fitness']['FitnessCanAiCode'])
+else:
+    raise Exception("Valid fitness not defined")
 evolver = Evolution(evaluator, config['params'], config['population'])
 evolver.run(1)
