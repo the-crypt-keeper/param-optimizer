@@ -1,11 +1,14 @@
 class FitnessBase():
     def get_evaluation(self, id):
+        print("FitnessBase: get_evaluation", id)
         return None
     
     def perform_evaluation(self, id):
+        print("FitnessBase: perform_evaluation", id)
         pass
 
     def wait_all(self):
+        print("FitnessBase: wait_all")
         pass
 
 class FitnessCanAiCode(FitnessBase):

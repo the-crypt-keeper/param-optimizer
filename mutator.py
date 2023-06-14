@@ -6,6 +6,4 @@ config = yaml.safe_load(open('config.yaml'))
 evaluator = FitnessBase()
 
 evolver = Evolution(evaluator, config['params'], config['population'])
-evolver.next_generation()
-evolver.next_generation()
-evolver.display()
+evolver.run(2)

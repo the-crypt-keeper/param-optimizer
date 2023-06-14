@@ -1,5 +1,4 @@
 import random
-from copy import copy
 
 class ParameterMutation:
     def __init__(self, parameter, value, mutation_type, mutation_value, max_value=None, min_value=None):

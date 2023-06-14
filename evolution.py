@@ -8,24 +8,29 @@ class Evolution():
         self.generations = []
         self.next_id = 0
 
-    def display(self):
-        for idx, g in enumerate(self.generations):
-            print(f"**Generation {idx}")
+    def display(self, gen = None):
+        for idx, g in enumerate(self.generations if gen is None else [self.generations[gen]]):
+            print(f"**Generation {idx if gen is None else len(self.generations)-1 if gen == -1 else gen}")
             for p in g:
                 print(f"  {p}")
 
+    def calculate_fitness(self):
+        for params in self.generations[-1]:
+            if self.evaluator.get_evaluation(params.id) is None:
+                self.evaluator.perform_evaluation(params.id)
+        self.evaluator.wait_all()
+    
     def rank(self):
         if len(self.generations) == 0:
             return []
         else:
-            generation = self.generations[-1]
-            results = [self.evaluator.get_evaluation(params.id) for params in generation]
-            top = sorted(zip(generation, results), key=lambda x: x[1] if x[1] is not None else -float('inf'), reverse=True)
+            results = [self.evaluator.get_evaluation(params.id) for params in self.generations[-1]]
+            top = sorted(zip(self.generations[-1], results), key=lambda x: x[1] if x[1] is not None else -float('inf'), reverse=True)
+            for param, result in top:
+                print(f"  {result} {param}")
             sorted_generation = [x[0] for x in top]
-            print(sorted_generation)
             return sorted_generation
-                
-
+    
     def pick(self, condition, top):
         if 'top' in condition:
             return top[condition['top']]
@@ -65,5 +70,8 @@ class Evolution():
         else:
             self.spawn_generation(self.config['selection'])
 
-    def run(self):
-        pass
+    def run(self, num_generations = 1):
+        for i in range(num_generations):
+            self.next_generation()
+            self.calculate_fitness()
+            self.display(-1)
