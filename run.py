@@ -64,7 +64,7 @@ class FitnessCanAiCode(FitnessBase):
         #output, ret = stream_shell_command(cmd_line)
         
     def get_evaluation(self, params):
-        eval_files = glob.glob(self.resultglob.replace('{id}', str(params.id)))
+        eval_files = glob.glob(self.resultglob.replace('interview_','eval_').replace('{id}', str(params.id)))
         if len(eval_files) == 0:
             return None
         
@@ -80,7 +80,7 @@ class FitnessCanAiCode(FitnessBase):
                         passed += test['passed']
             evals.append(passed / total if total != 0 else 0)
 
-        return evals
+        return sum(evals) / len(evals)
 
 config = yaml.safe_load(open('config.yaml'))
 if 'FitnessCanAiCode' in config['fitness']:
@@ -88,4 +88,4 @@ if 'FitnessCanAiCode' in config['fitness']:
 else:
     raise Exception("Valid fitness not defined")
 evolver = Evolution(evaluator, config['params'], config['population'])
-evolver.run(1)
+evolver.run(2)
