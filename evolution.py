@@ -16,15 +16,15 @@ class Evolution():
 
     def calculate_fitness(self):
         for params in self.generations[-1]:
-            if self.evaluator.get_evaluation(params.id) is None:
-                self.evaluator.perform_evaluation(params.id)
+            if self.evaluator.get_evaluation(params) is None:
+                self.evaluator.perform_evaluation(params)
         self.evaluator.wait_all()
     
     def rank(self):
         if len(self.generations) == 0:
             return []
         else:
-            results = [self.evaluator.get_evaluation(params.id) for params in self.generations[-1]]
+            results = [self.evaluator.get_evaluation(params) for params in self.generations[-1]]
             top = sorted(zip(self.generations[-1], results), key=lambda x: x[1] if x[1] is not None else -float('inf'), reverse=True)
             for param, result in top:
                 print(f"  {result} {param}")
