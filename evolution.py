@@ -45,17 +45,19 @@ class Evolution():
         for selection in selections:
             if 'initial' in selection:
                 new_generation.append(ParameterMutationList(self.param_list, self.next_id))
+                self.next_id += 1
             elif 'pick' in selection:
                 new_generation.append(self.pick(selection['pick'], top))                
             elif 'mutate' in selection:
                 new_generation.append(self.pick(selection['mutate'], top).mutate(self.next_id, selection['mutate']['iter']))
+                self.next_id += 1
             elif 'breed' in selection:
                 mom = self.pick(selection['breed']['mom'], top)
                 dad = self.pick(selection['breed']['dad'], top)
                 new_generation.append(mom.breed(self.next_id, dad))
+                self.next_id += 1
             else:
                 raise Exception('Invalid selection: '+selection)
-            self.next_id += 1
 
     def next_generation(self):
         if len(self.generations) == 0:
