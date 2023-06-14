@@ -5,6 +5,7 @@ from fitness import FitnessBase
 from evolution import Evolution
 from pathlib import Path
 import glob
+import sys
 
 def stream_shell_command(command):
     try:
@@ -81,11 +82,15 @@ class FitnessCanAiCode(FitnessBase):
             evals.append(passed / total if total != 0 else 0)
 
         return sum(evals) / len(evals)
+    
+if len(sys.argv) < 3:
+    print('usage: run.py <config.yaml> <generations>')
+    sys.exit(1)
 
-config = yaml.safe_load(open('config.yaml'))
+config = yaml.safe_load(open(sys.argv[1]))
 if 'FitnessCanAiCode' in config['fitness']:
     evaluator = FitnessCanAiCode(**config['fitness']['FitnessCanAiCode'])
 else:
     raise Exception("Valid fitness not defined")
-evolver = Evolution(evaluator, config['params'], config['population'])
-evolver.run(2)
+evolver = Evolution(evaluator, config)
+evolver.run(int(sys.argv[2]))

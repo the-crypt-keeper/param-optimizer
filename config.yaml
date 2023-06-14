@@ -1,3 +1,5 @@
+state: 'python-vicuna-7b.state.json'
+
 fitness:
   FitnessCanAiCode:
     language: 'both'

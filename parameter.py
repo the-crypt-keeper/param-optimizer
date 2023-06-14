@@ -56,7 +56,7 @@ class ParameterMutation:
         return f'{self.parameter}: {value_str}'
 
 class ParameterMutationList:
-    def __init__(self, params, id, parent=[]):
+    def __init__(self, params, id, parent=[], values={}):
         """
         A class representing a set of mutable parameters.
 
@@ -68,6 +68,10 @@ class ParameterMutationList:
         self.id = id
         self.parent = parent
         self.mutation_list = [ParameterMutation(**mutation_dict) for mutation_dict in params]
+
+        for mutation in self.mutation_list:
+            if values.get(mutation.parameter):
+                mutation.value = values[mutation.parameter]
 
     def get_parameters(self):
         """
