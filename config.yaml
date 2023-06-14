@@ -15,35 +15,35 @@ population:
 
 params:
 - parameter: temperature
-  initial_value: 1.0
+  value: 1.0
   mutation_type: geometric
   mutation_value:
     uniform: [0.9, 1.05]
   min_value: 0.0
 
 - parameter: repetition_penalty
-  initial_value: 1.176
+  value: 1.176
   mutation_type: geometric
   mutation_value:
     uniform: [0.95, 1.05]
   min_value: 1.0
 
 - parameter: top_k
-  initial_value: 1
+  value: 1
   mutation_type: additive
   mutation_value:
     uniform: [-1, 1]
   min_value: 1
 
 - parameter: top_p
-  initial_value: 1.0
+  value: 1.0
   mutation_type: geometric
   mutation_value:
     uniform: [0.9, 1.1]
   max_value: 1.0
 
 - parameter: repeat_last_n
-  initial_value: 256
+  value: 256
   mutation_type: additive
   mutation_value:
     uniform: [-32, 8]

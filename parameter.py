@@ -2,17 +2,13 @@ import random
 from copy import copy
 
 class ParameterMutation:
-    """
-    A class representing a single mutable parameter.
-    """
-
-    def __init__(self, parameter, initial_value, mutation_type, mutation_value, max_value=None, min_value=None):
+    def __init__(self, parameter, value, mutation_type, mutation_value, max_value=None, min_value=None):
         """
-        Initializes a new instance of the ParameterMutation class.
+        A class representing a single mutable parameter.
 
         Args:
             parameter (str): The name of the parameter.
-            initial_value (int or float): The initial value of the parameter.
+            value (int or float): The initial value of the parameter.
             mutation_type (str): The type of mutation to apply (either 'additive' or 'geometric').
             mutation_value (dict): The value used for mutation, which can be either a constant or a range.
                 - If constant: {'constant': value}
@@ -21,7 +17,7 @@ class ParameterMutation:
             min_value (int or float, optional): The minimum value allowed for the parameter. Defaults to None.
         """
         self.parameter = parameter
-        self.value = initial_value
+        self.value = value
         self.mutation_type = mutation_type
         self.mutation_value = mutation_value
         self.min_value = min_value
@@ -29,10 +25,7 @@ class ParameterMutation:
 
     def gen_value(self):
         """
-        Generates a new value for mutation.
-
-        Returns:
-            int or float: The generated value within the specified range (if applicable).
+        Applies mutation to generation and return a potential new value.
         """
         if 'uniform' in self.mutation_value:
             v = random.uniform(*self.mutation_value['uniform'])
@@ -59,21 +52,14 @@ class ParameterMutation:
     def __repr__(self):
         """
         Returns a string representation of the ParameterMutation object.
-
-        Returns:
-            str: The string representation of the object in the format '{parameter}: {value}'.
         """
         value_str = f'{self.value}' if isinstance(self.value, int) else f'{self.value:.3f}'
         return f'{self.parameter}: {value_str}'
 
 class ParameterMutationList:
-    """
-    A class representing a set of mutable parameters.
-    """
-
     def __init__(self, params, id, parent=[]):
         """
-        Initializes a new instance of the ParameterMutationList class.
+        A class representing a set of mutable parameters.
 
         Args:
             params (list): A list of dictionaries representing the parameters and their mutation configurations.
@@ -87,9 +73,6 @@ class ParameterMutationList:
     def get_parameters(self):
         """
         Retrieves the current values of all parameters in a dictionary format.
-
-        Returns:
-            dict: A dictionary with parameter names as keys and their corresponding values.
         """
         return {mutation.parameter: mutation.value for mutation in self.mutation_list}
 
@@ -100,13 +83,9 @@ class ParameterMutationList:
         Args:
             new_id (int): The identifier for the cloned instance.
 
-        Returns:
-            ParameterMutationList: The cloned instance of the ParameterMutationList class.
+        Returns: The cloned instance of the ParameterMutationList class.
         """
-        params = [copy(mutation.__dict__) for mutation in self.mutation_list]
-        for p in params:
-            p['initial_value'] = p.pop('value')
-        return ParameterMutationList(params, new_id, [self.id])
+        return ParameterMutationList([mutation.__dict__ for mutation in self.mutation_list], new_id, [self.id])
 
     def mutate(self, new_id, iter):
         """
@@ -116,8 +95,7 @@ class ParameterMutationList:
             new_id (int): The identifier for the mutated instance.
             iter (int): The number of mutations to apply.
 
-        Returns:
-            ParameterMutationList: The mutated instance of the ParameterMutationList class.
+        Returns: The mutated instance of the ParameterMutationList class.
         """
         mutant = self.clone(new_id)
         for _ in range(iter):
@@ -133,8 +111,7 @@ class ParameterMutationList:
             new_id (int): The identifier for the child instance.
             other (ParameterMutationList): The other instance to breed with.
 
-        Returns:
-            ParameterMutationList: The child instance resulting from breeding.
+        Returns: The child instance resulting from breeding.
         """
         child = self.clone(new_id)
         child.parent = [self.id, other.id]
@@ -146,9 +123,6 @@ class ParameterMutationList:
     def __repr__(self):
         """
         Returns a string representation of the ParameterMutationList object.
-
-        Returns:
-            str: The string representation of the object, including the ID and the list of parameter mutations.
         """
         return f"[{self.id:2d} | {self.parent}] " + ' '.join([str(mutation) for mutation in self.mutation_list])
     
