@@ -18,7 +18,13 @@ class Evolution():
         if len(self.generations) == 0:
             return []
         else:
-            return self.generations[-1]
+            generation = self.generations[-1]
+            results = [self.evaluator.get_evaluation(params.id) for params in generation]
+            top = sorted(zip(generation, results), key=lambda x: x[1] if x[1] is not None else -float('inf'), reverse=True)
+            sorted_generation = [x[0] for x in top]
+            print(sorted_generation)
+            return sorted_generation
+                
 
     def pick(self, condition, top):
         if 'top' in condition:
