@@ -94,3 +94,4 @@ else:
     raise Exception("Valid fitness not defined")
 evolver = Evolution(evaluator, config)
 evolver.run(int(sys.argv[2]))
+evolver.rank()
