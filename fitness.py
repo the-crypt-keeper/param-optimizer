@@ -1,7 +1,7 @@
 class FitnessBase():
     def get_evaluation(self, params):
         print("FitnessBase: get_evaluation", params)
-        return None
+        return None, None
     
     def perform_evaluation(self, params):
         print("FitnessBase: perform_evaluation", params)

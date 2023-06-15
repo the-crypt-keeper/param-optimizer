@@ -6,6 +6,7 @@ from evolution import Evolution
 from pathlib import Path
 import glob
 import sys
+from statistics import mean, stdev
 
 def stream_shell_command(command):
     try:
@@ -13,18 +14,18 @@ def stream_shell_command(command):
 
         # Stream the output to the terminal
         while True:
-            output = process.stdout.readline().decode().strip()
+            output = process.stdout.readline().decode()
             if output:
-                print(output)
+                print(output, end='')
             if process.poll() is not None:
                 break
             
         # Wait for the command to finish and get the return code
-        return None, process.wait()
+        return process.wait()
     except subprocess.CalledProcessError as e:
         # Handle any errors that occurred during command execution
         print("Error:", e)
-        return None, e.returncode
+        return e.returncode
     
 class FitnessCanAiCode(FitnessBase):
     def __init__(self, input, language, interviewer, evaluate, paramdir, paramprefix, resultglob):
@@ -37,34 +38,36 @@ class FitnessCanAiCode(FitnessBase):
         self.resultglob = resultglob
 
     def perform_evaluation(self, params):
+        # Write param file
         param_file = Path(self.paramdir).joinpath(f"{self.paramprefix}-{params.id}.json")
         with open(param_file, 'w') as f:
             json.dump(params.get_parameters(), f)
 
+        # Execute interviewer
         cmd_line = f"{self.interviewer} --input {self.input} --params {param_file}"
         print("Executing Interview:", cmd_line)
-        output, ret = stream_shell_command(cmd_line)
+        if stream_shell_command(cmd_line) != 0:
+            print('Interview bad result!')
 
-        if ret != 0:
-            print('Interview bad result: ', ret, output)
-
+        # Find the interview result file
         eval_files = glob.glob(self.resultglob.replace('{id}', str(params.id)))
         if len(eval_files) != 1:
             print('Interview failed: ', params, eval_files)
             return False
         
+        # Execute evaluator
         cmd_line = f"{self.evaluate} --input {eval_files[0]}"
         print("Executing Evalulation:", cmd_line)
-        output, ret = stream_shell_command(cmd_line)
-        
-        if ret != 0:
-            print('Evalulation bad result: ', ret, output)
+        if stream_shell_command(cmd_line) != 0:
+            print('Evaluation bad result!')
         
     def get_evaluation(self, params):
+        # Find evaluator result files
         eval_files = glob.glob(self.resultglob.replace('interview_','eval_').replace('{id}', str(params.id)))
         if len(eval_files) == 0:
-            return None
+            return None, None
         
+        # Read and aggregate them
         evals = []
         for eval in eval_files:
             total = 0
@@ -77,7 +80,10 @@ class FitnessCanAiCode(FitnessBase):
                         passed += test['passed']
             evals.append(passed / total if total != 0 else 0)
 
-        return sum(evals) / len(evals)
+        # Return the average and std. deviation
+        avg = mean(evals) if len(evals) > 0 else evals[0]
+        sdev = stdev(evals) if len(evals) > 1 else 0 if len(evals) == 1 else None
+        return avg, sdev
     
 if len(sys.argv) < 3:
     print('usage: run.py <config.yaml> <generations>')

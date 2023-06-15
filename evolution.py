@@ -44,22 +44,14 @@ class Evolution():
         self.evaluator.wait_all()
     
     def rank(self):
-        if len(self.generations) == 0:
-            return []
-        else:
-            flat_params = []
-            for gen in self.generations:
-                for p in gen:
-                    if p not in flat_params:
-                        flat_params.append(p)
-
-            results = [self.evaluator.get_evaluation(params) for params in flat_params]
-            top = sorted(zip(flat_params, results), key=lambda x: x[1] if x[1] is not None else -float('inf'), reverse=True)
-            print('---- RANKING ----')
-            for param, result in top:
-                print(f"  {result} {param}")
-            sorted_generation = [x[0] for x in top]
-            return sorted_generation
+        results = [self.evaluator.get_evaluation(params) for params in self.species]
+        top = sorted(zip(self.species, results), key=lambda x: x[1][0] if x[1] is not None else -float('inf'), reverse=True)
+        
+        print('---- RANKING ----')
+        for param, result in top:
+            print(f"  {result[0]:.3f} {result[1]:.3f} {param}")
+        
+        return [x[0] for x in top]
     
     def pick(self, condition, top):
         if 'top' in condition:
@@ -102,15 +94,16 @@ class Evolution():
             
         self.save()
 
-    def next_generation(self):
-        if len(self.generations) == 0:
-            self.spawn_generation(self.population['initial'])
-        else:
-            self.spawn_generation(self.population['selection'])
-
     def run(self, num_generations = 1):
         for gen in range(num_generations):
+            # New generation?
             if gen >= len(self.generations):
-                self.next_generation()
+                # Spawn
+                if gen == 0:
+                    self.spawn_generation(self.population['initial'])
+                else:
+                    self.spawn_generation(self.population['selection'])
+                # Evaluate
                 self.calculate_fitness()
+            # Display
             self.display(gen)
