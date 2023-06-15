@@ -82,7 +82,7 @@ class FitnessCanAiCode(FitnessBase):
 
         # Return the average and std. deviation
         avg = mean(evals) if len(evals) > 0 else evals[0]
-        sdev = stdev(evals) if len(evals) > 1 else 0 if len(evals) == 1 else None
+        sdev = stdev(evals) if len(evals) > 1 else 0
         return avg, sdev
     
 if len(sys.argv) < 3:
@@ -95,5 +95,6 @@ if 'FitnessCanAiCode' in config['fitness']:
 else:
     raise Exception("Valid fitness not defined")
 evolver = Evolution(evaluator, config)
+evolver.calculate_fitness()
 evolver.run(int(sys.argv[2]))
 evolver.rank()

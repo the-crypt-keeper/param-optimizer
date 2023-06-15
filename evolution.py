@@ -39,17 +39,20 @@ class Evolution():
 
     def calculate_fitness(self):
         for params in self.species:
-            if self.evaluator.get_evaluation(params) is None:
+            if self.evaluator.get_evaluation(params)[0] is None:
                 self.evaluator.perform_evaluation(params)
         self.evaluator.wait_all()
     
     def rank(self):
         results = [self.evaluator.get_evaluation(params) for params in self.species]
-        top = sorted(zip(self.species, results), key=lambda x: x[1][0] if x[1] is not None else -float('inf'), reverse=True)
+        top = sorted(zip(self.species, results), key=lambda x: x[1][0] if x[1][0] is not None else -float('inf'), reverse=True)
         
         print('---- RANKING ----')
         for param, result in top:
-            print(f"  {result[0]:.3f} {result[1]:.3f} {param}")
+            if result[0] is None:
+                print(f"  ----- ----- {param}")
+            else:
+                print(f"  {result[0]:.3f} {result[1]:.3f} {param}")
         
         return [x[0] for x in top]
     
