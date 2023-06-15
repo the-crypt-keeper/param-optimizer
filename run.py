@@ -10,27 +10,17 @@ import sys
 def stream_shell_command(command):
     try:
         process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-        captured_output = ""
-        return_code = None
 
+        # Stream the output to the terminal
         while True:
-            output = process.stdout.readline()
-            stripped_output = output.strip()
-            print(stripped_output)
-            captured_output += stripped_output + '\n'
-
-            # Check for process completion
-            return_code = process.poll()
-            if return_code is not None:
-                # Collect remaining output, if any
-                for output in process.stdout.readlines():
-                    stripped_output = output.strip()
-                    print(stripped_output)
-                    captured_output += stripped_output + '\n'
+            output = process.stdout.readline().decode().strip()
+            if output:
+                print(output)
+            if process.poll() is not None:
                 break
-
-        return captured_output.strip(), return_code
-
+            
+        # Wait for the command to finish and get the return code
+        return None, process.wait()
     except subprocess.CalledProcessError as e:
         # Handle any errors that occurred during command execution
         print("Error:", e)
@@ -53,7 +43,10 @@ class FitnessCanAiCode(FitnessBase):
 
         cmd_line = f"{self.interviewer} --input {self.input} --params {param_file}"
         print("Executing Interview:", cmd_line)
-        #output, ret = stream_shell_command(cmd_line)
+        output, ret = stream_shell_command(cmd_line)
+
+        if ret != 0:
+            print('Interview bad result: ', ret, output)
 
         eval_files = glob.glob(self.resultglob.replace('{id}', str(params.id)))
         if len(eval_files) != 1:
@@ -62,7 +55,10 @@ class FitnessCanAiCode(FitnessBase):
         
         cmd_line = f"{self.evaluate} --input {eval_files[0]}"
         print("Executing Evalulation:", cmd_line)
-        #output, ret = stream_shell_command(cmd_line)
+        output, ret = stream_shell_command(cmd_line)
+        
+        if ret != 0:
+            print('Evalulation bad result: ', ret, output)
         
     def get_evaluation(self, params):
         eval_files = glob.glob(self.resultglob.replace('interview_','eval_').replace('{id}', str(params.id)))

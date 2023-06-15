@@ -4,7 +4,7 @@ fitness:
   FitnessCanAiCode:
     language: 'both'
     input: 'can-ai-code/results/prepare_junior-dev_python_Vicuna-1p1.ndjson'
-    interviewer: 'python3 can-ai-code/interview-llamacpp.py --ssh miner --threads 4 --model /home/miner/ai/models/v3/ggml-vicuna-7b-1.1-q5_0.bin'
+    interviewer: 'python3 -u can-ai-code/interview-llamacpp.py --ssh miner --threads 4 --model /home/miner/ai/models/v3/ggml-vicuna-7b-1.1-q5_0.bin'
     evaluate: 'python3 can-ai-code/evaluate.py'
     paramdir: 'python-vicuna-7b/'
     paramprefix: 'vicuna-7b'
