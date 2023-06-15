@@ -12,35 +12,24 @@ class Evolution():
         self.load()
 
     def load(self):
-        state_generations = []
+        state = { 'species': [], 'generations': [] }
         try:
             with open(self.state, 'r') as f:
-                state_generations = json.load(f)
+                state = json.load(f)
         except FileNotFoundError:
             pass
 
-        self.generations = []
-        for gen in state_generations:
-            next_gen = [ParameterMutationList(self.param_list, p['id'], p['parent'], p) for p in gen]
-            self.generations.append(next_gen)
-
-        ids = [p['id'] for gen in state_generations for p in gen]
-        print(ids)
-        self.next_id = max(ids)+1 if len(ids) != 0 else 0
+        self.species = [ParameterMutationList(self.param_list, s['id'], s['parent'], s['values']) for s in state['species']]
+        self.generations = [[self.species[p] for p in g] for g in state['generations']]
+        self.next_id = len(self.species)
 
     def save(self):
-        state_generations = []
-        for gen in self.generations:
-            next_gen = []
-            for p in gen:
-                serial_p = p.get_parameters()
-                serial_p['id'] = p.id
-                serial_p['parent'] = p.parent
-                next_gen.append(serial_p)
-            state_generations.append(next_gen)
-
+        state = {
+            'species': [{'id': s.id, 'parent': s.parent, 'values': s.get_parameters()} for s in self.species],
+            'generations': [[p.id for p in gen] for gen in self.generations]
+        }
         with open(self.state, 'w') as f:
-            json.dump(state_generations, f)
+            json.dump(state, f)
 
     def display(self, gen = None):
         for idx, g in enumerate(self.generations if gen is None else [self.generations[gen]]):
@@ -49,7 +38,7 @@ class Evolution():
                 print(f"  {p}")
 
     def calculate_fitness(self):
-        for params in self.generations[-1]:
+        for params in self.species:
             if self.evaluator.get_evaluation(params) is None:
                 self.evaluator.perform_evaluation(params)
         self.evaluator.wait_all()
@@ -90,17 +79,23 @@ class Evolution():
 
         for selection in selections:
             if 'initial' in selection:
-                new_generation.append(ParameterMutationList(self.param_list, self.next_id))
+                s = ParameterMutationList(self.param_list, self.next_id)
+                new_generation.append(s)
+                self.species.append(s)                
                 self.next_id += 1
             elif 'pick' in selection:
                 new_generation.append(self.pick(selection['pick'], top))                
             elif 'mutate' in selection:
-                new_generation.append(self.pick(selection['mutate'], top).mutate(self.next_id, selection['mutate']['iter']))
+                s = self.pick(selection['mutate'], top).mutate(self.next_id, selection['mutate']['iter'])
+                new_generation.append(s)
+                self.species.append(s) 
                 self.next_id += 1
             elif 'breed' in selection:
                 mom = self.pick(selection['breed']['mom'], top)
                 dad = self.pick(selection['breed']['dad'], top)
-                new_generation.append(mom.breed(self.next_id, dad))
+                s = mom.breed(self.next_id, dad)
+                new_generation.append(s)
+                self.species.append(s) 
                 self.next_id += 1
             else:
                 raise Exception('Invalid selection: '+selection)
