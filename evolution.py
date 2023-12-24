@@ -1,5 +1,6 @@
 import json
 from parameter import ParameterMutationList
+from statistics import mean, stdev
 
 class Evolution():
     def __init__(self, evaluator, config):
@@ -39,20 +40,22 @@ class Evolution():
 
     def calculate_fitness(self):
         for params in self.species:
-            if self.evaluator.get_evaluation(params)[0] is None:
+            if len(self.evaluator.get_evaluation(params)) < self.evaluator.samples:
                 self.evaluator.perform_evaluation(params)
         self.evaluator.wait_all()
     
     def rank(self):
-        results = [self.evaluator.get_evaluation(params) for params in self.species]
-        top = sorted(zip(self.species, results), key=lambda x: x[1][0] if x[1][0] is not None else -float('inf'), reverse=True)
+        evals = [self.evaluator.get_evaluation(params) for params in self.species]
+        top = sorted(zip(self.species, evals), key=lambda x: mean(x[1]) if len(x[1]) > 0 else -float('inf'), reverse=True)
         
         print('---- RANKING ----')
         for param, result in top:
-            if result[0] is None:
-                print(f"  ----- ----- {param}")
+            if result is None:
+                print(f" ----- ----- {param}")
             else:
-                print(f"  {result[0]:.3f} {result[1]:.3f} {param}")
+                avg = mean(result) if len(result) > 0 else result[0]
+                sdev = stdev(result) if len(result) > 1 else 0
+                print(f"  {avg:.3f} {sdev:.3f} {param}")
         
         return [x[0] for x in top]
     
@@ -74,26 +77,21 @@ class Evolution():
 
         for selection in selections:
             if 'initial' in selection:
-                s = ParameterMutationList(self.param_list, self.next_id)
-                new_generation.append(s)
-                self.species.append(s)                
-                self.next_id += 1
+                new_generation.append(ParameterMutationList(self.param_list, self.next_id))
+                self.species.append(new_generation[-1])
             elif 'pick' in selection:
                 new_generation.append(self.pick(selection['pick'], top))                
             elif 'mutate' in selection:
-                s = self.pick(selection['mutate'], top).mutate(self.next_id, selection['mutate']['iter'])
-                new_generation.append(s)
-                self.species.append(s) 
-                self.next_id += 1
+                new_generation.append(self.pick(selection['mutate'], top).mutate(self.next_id, selection['mutate']['iter']))
+                self.species.append(new_generation[-1])
             elif 'breed' in selection:
                 mom = self.pick(selection['breed']['mom'], top)
                 dad = self.pick(selection['breed']['dad'], top)
-                s = mom.breed(self.next_id, dad)
-                new_generation.append(s)
-                self.species.append(s) 
-                self.next_id += 1
+                new_generation.append(mom.breed(self.next_id, dad))
+                self.species.append(new_generation[-1])
             else:
                 raise Exception('Invalid selection: '+selection)
+            self.next_id = len(self.species)
             
         self.save()
 

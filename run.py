@@ -28,7 +28,7 @@ def stream_shell_command(command):
         return e.returncode
     
 class FitnessCanAiCode(FitnessBase):
-    def __init__(self, input, language, interviewer, evaluate, paramdir, paramprefix, resultglob):
+    def __init__(self, input, language, interviewer, evaluate, paramdir, paramprefix, resultglob, samples):
         self.language = language
         self.input = input
         self.interviewer = interviewer
@@ -36,6 +36,7 @@ class FitnessCanAiCode(FitnessBase):
         self.paramdir = paramdir
         self.paramprefix = paramprefix
         self.resultglob = resultglob
+        self.samples = samples
 
     def perform_evaluation(self, params):
         # Write param file
@@ -50,22 +51,25 @@ class FitnessCanAiCode(FitnessBase):
             print('Interview bad result!')
 
         # Find the interview result file
-        eval_files = glob.glob(self.resultglob.replace('{id}', str(params.id)))
-        if len(eval_files) != 1:
-            print('Interview failed: ', params, eval_files)
-            return False
+        interview_files = glob.glob(self.resultglob.replace('{id}', str(params.id)))
+        if len(interview_files) != self.samples:
+            print('WARNING: Interview iterations incorrect', params.id, len(interview_files))
         
         # Execute evaluator
-        cmd_line = f"{self.evaluate} --input {eval_files[0]}"
-        print("Executing Evalulation:", cmd_line)
-        if stream_shell_command(cmd_line) != 0:
-            print('Evaluation bad result!')
-        
+        for interview_file in interview_files:
+            # if the file already exists, skip it
+            eval_file = interview_file.replace('interview_', 'eval_')
+            if Path(eval_file).exists():
+                continue
+
+            cmd_line = f"{self.evaluate} --input {interview_file}"
+            print("Executing Evalulation:", cmd_line)
+            if stream_shell_command(cmd_line) != 0:
+                print('Evaluation bad result!')
+
     def get_evaluation(self, params):
         # Find evaluator result files
         eval_files = glob.glob(self.resultglob.replace('interview_','eval_').replace('{id}', str(params.id)))
-        if len(eval_files) == 0:
-            return None, None
         
         # Read and aggregate them
         evals = []
@@ -81,9 +85,7 @@ class FitnessCanAiCode(FitnessBase):
             evals.append(passed / total if total != 0 else 0)
 
         # Return the average and std. deviation
-        avg = mean(evals) if len(evals) > 0 else evals[0]
-        sdev = stdev(evals) if len(evals) > 1 else 0
-        return avg, sdev
+        return evals
     
 if len(sys.argv) < 3:
     print('usage: run.py <config.yaml> <generations>')
